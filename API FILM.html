@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>API de Films</title>
+	<style>
+		* {
+	box-sizing: border-box;
+	font-family: sans-serif;
+	margin: 0;
+	padding: 0;
+}
+.header {
+	background-color: #333;
+	color: #fff;
+	padding: 20px;
+	text-align: center;
+}
+.header h1 {
+	font-size: 32px;
+	margin-bottom: 20px;
+}
+.container {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: space-around;
+	padding: 20px;
+}
+.card {
+	background-color: #fff;
+	box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
+	cursor: pointer;
+	margin-bottom: 20px;
+	overflow: hidden;
+	position: relative;
+	transition: all 0.3s ease-in-out;
+	width: 300px;
+}
+.card:hover {
+	transform: scale(1.05);
+}
+.card img {
+	height: 400px;
+	object-fit: cover;
+	width: 100%;
+}
+.card h2 {
+	background-color: rgba(0, 0, 0, 0.8);
+	color: #fff;
+	font-size: 24px;
+	padding: 10px;
+	position: absolute;
+	bottom: 0;
+	left: 0;
+	width: 100%;
+}
+.popup {
+	background-color: rgba(0, 0, 0, 0.8);
+	display: none;
+	height: 100%;
+	left: 0;
+	position: fixed;
+	top: 0;
+	width: 100%;
+	z-index: 999;
+}
+.popup-inner {
+	background-color: #fff;
+	box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
+	margin: auto;
+	margin-top: 50px;
+	padding: 20px;
+	position: relative;
+	width: 80%;
+}
+.popup-inner img {
+	height: 500px;
+	object-fit: cover;
+	width: 100%;
+}
+.popup-inner h2 {
+	font-size: 32px;
+	margin-bottom: 20px;
+}
+.popup-inner p {
+	font-size: 20px;
+	margin-bottom: 20px;
+}
+.popup-close {
+	background-color: #333;
+	color: #fff;
+	cursor: pointer;
+	font-size: 24px;
+	padding: 10px;
+	position: absolute;
+	top: 10px;
+	right: 10px;
+}
+
+	</style>
+</head>
+<body>
+	<div class="header">
+		<h1>Catalogue de Films</h1>
+		<input type="text" id="searchBar" placeholder="Rechercher un film...">
+	</div>
+	<div class="container"></div>
+	<div class="popup"></div>
+	<script>
+	const APIURL = "https://api.themoviedb.org/3/discover/movie?sort_by=popularity.desc&api_key=04c35731a5ee918f014970082a0088b1&page=1";
+	const IMGPATH = "https://image.tmdb.org/t/p/w1280";
+	const SEARCHAPI = "https://api.themoviedb.org/3/search/movie?&api_key=04c35731a5ee918f014970082a0088b1&query=";
+	const container = document.querySelector(".container");
+	const searchBar = document.getElementById("searchBar");
+	const popup = document.querySelector(".popup");
+	const popupInner = document.querySelector(".popup-inner");
+	const popupClose = document.querySelector(".popup-close");
+	
+	// Afficher les films dans le catalogue
+	function showMovies(movies) {
+		container.innerHTML = "";
+		movies.forEach((movie) => {
+			const { title, poster_path, vote_average, overview } = movie;
+			const movieCard = document.createElement("div");
+			movieCard.classList.add("card");
+			movieCard.innerHTML = `
+				<img src="${IMGPATH + poster_path}" alt="${title}">
+				<h2>${title}</h2>
+			`;
+			movieCard.addEventListener("click", () => {
+				popup.classList.add("active");
+				popupInner.innerHTML = `
+					<img src="${IMGPATH + poster_path}" alt="${title}">
+					<h2>${title}</h2>
+					<p>${overview}</p>
+					<p>Note : ${vote_average}/10</p>
+				`;
+			});
+			container.appendChild(movieCard);
+		});
+	}
+	
+	// Rechercher un film
+	searchBar.addEventListener("keyup", (event) => {
+		if (event.keyCode === 13) {
+			const searchValue = searchBar.value.trim();
+			if (searchValue) {
+				fetch(SEARCHAPI + searchValue)
+					.then((response) => response.json())
+					.then((data) => {
+						if (data.results.length > 0) {
+							showMovies(data.results);
+						} else {
+							container.innerHTML = "<h2>Aucun film trouvé</h2>";
+						}
+					});
+			}
+		}
+	});
+	
+	// Fermer la popup
+	popupClose.addEventListener("click", () => {
+		popup.classList.remove("active");
+	});
+	popup.addEventListener("click", (event) => {
+		if (event.target.classList.contains("popup")) {
+			popup.classList.remove("active");
+		}
+	});
+	
+	// Charger les films au démarrage de la page
+	fetch(APIURL)
+		.then((response) => response.json())
+		.then((data) => showMovies(data.results));
+	
+		
+	</script>
+</body>
+</html>
